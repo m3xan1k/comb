@@ -8,6 +8,19 @@
     source
     (slurp source)))
 
+(defn html-escape
+  "Escape HTML entities to prevent XSS attacks."
+  [s]
+  (if (nil? s)
+    nil
+    (let [s (str s)]
+      (-> s
+          (.replace "&" "&amp;")
+          (.replace "<" "&lt;")
+          (.replace ">" "&gt;")
+          (.replace "\"" "&quot;")
+          (.replace "'" "&#x27;")))))
+
 (def delimiters ["<%" "%>"])
 
 (def parser-regex
@@ -22,8 +35,14 @@
   (print "(print " (pr-str s) ")"))
 
 (defn emit-expr [expr]
-  (if (.startsWith expr "=")
-    (print "(print " (subs expr 1) ")")
+  (cond
+    (.startsWith expr "==")  ; <%== %> for raw output
+    (print "(print " (subs expr 2) ")")
+    
+    (.startsWith expr "=")   ; <%= %> for escaped output (default)
+    (print "(print (comb.template/html-escape " (subs expr 1) "))")
+    
+    :else                    ; <% %> for code blocks
     (print expr)))
 
 (defn- parse-string [src]

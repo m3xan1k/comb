@@ -1,7 +1,7 @@
 # Comb [![Build Status](https://github.com/weavejester/comb/actions/workflows/test.yml/badge.svg)](https://github.com/weavejester/comb/actions/workflows/test.yml)
 
-Comb is a simple templating system for Clojure. You can use Comb to embed
-fragments of Clojure code into a text file.
+Comb is a simple templating system for Clojure with built-in HTML escaping for security. 
+You can use Comb to embed fragments of Clojure code into a text file safely.
 
 ## Installation
 
@@ -27,14 +27,27 @@ For example:
 => "foofoofoo"
 ```
 
-The `<%= %>` tags will be subsituted for the value of the expression within them.
-This is used for inserting values into a template.
+The `<%= %>` tags will be substituted for the HTML-escaped value of the expression within them.
+This is used for safely inserting values into a template to prevent XSS attacks.
 
 For example:
 
 ```clojure
 (template/eval "Hello <%= name %>" {:name "Alice"})
 => "Hello Alice"
+
+(template/eval "Hello <%= name %>" {:name "<script>alert('XSS')</script>"})
+=> "Hello &lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;"
+```
+
+The `<%== %>` tags will be substituted for the raw value of the expression within them.
+Use this only for trusted content.
+
+For example:
+
+```clojure
+(template/eval "Hello <%== name %>" {:name "<b>Alice</b>"})
+=> "Hello <b>Alice</b>"
 ```
 
 ## API Documentation
